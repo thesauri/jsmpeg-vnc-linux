@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <X11/Xlib.h>
+#include <X11/X.h>
 
 void exit_usage(char *self_name) {
     printf(
@@ -35,7 +36,7 @@ int main(int argc, char* argv[]) {
         width = 0,
         height = 0;
 
-    char display[32] = ":0.1";
+    char display_name[32];
 
     // Parse command line options
     for (int i = 1; i < argc-1; i+=2) {
@@ -48,8 +49,25 @@ int main(int argc, char* argv[]) {
             case 'p': port = atoi(argv[i+1]); break;
             case 's': sscanf(argv[i+1], "%dx%d", &width, &height); break;
             case 'f': fps = atoi(argv[i+1]); break;
-            case 'i': strcpy(display, argv[i+1]); break;
+            case 'i': strcpy(display_name, argv[i+1]); break;
             default: exit_usage(argv[0]);
         }
     }
+
+    char *window_title = argv[argc-1];
+
+    Display *display = XOpenDisplay(display_name);
+    Window window;
+
+    if (strcmp(window_title, "desktop") == 0) {
+      window = DefaultRootWindow(display);
+    } else if (strcmp(window_title, "cursor") == 0) {
+      printf("Window at cursor not implemented yet..\n");
+      return 0;
+    } else {
+      printf("Window from window title not implemented yet..\n");
+      return 0;
+    }
+
+    return 0;
 }
