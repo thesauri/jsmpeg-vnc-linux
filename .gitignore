@@ -1,3 +1,5 @@
+.DS_STORE
+
 # Object files
 *.o
 *.ko
@@ -7,12 +9,6 @@
 # Precompiled Headers
 *.gch
 *.pch
-
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
 
 # Shared objects (inc. Windows DLLs)
 *.dll
