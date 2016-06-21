@@ -32,7 +32,7 @@ encoder_t *encoder_create(int in_width, int in_height, int out_width, int out_he
 
 	avcodec_open2(self->context, self->codec, NULL);
 
-	self->frame = av_alloc_frame();
+	self->frame = av_frame_alloc();
 	self->frame->format = AV_PIX_FMT_YUV420P;
 	self->frame->width  = out_width;
 	self->frame->height = out_height;
