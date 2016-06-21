@@ -30,10 +30,12 @@ int main(int argc, char* argv[]) {
     }
 
     int bit_rate = 0,
-    fps = 60,
-    port = 8080,
-    width = 0,
-    height = 0;
+        fps = 60,
+        port = 8080,
+        width = 0,
+        height = 0;
+
+    char display[32] = ":0.1";
 
     // Parse command line options
     for (int i = 1; i < argc-1; i+=2) {
@@ -46,6 +48,7 @@ int main(int argc, char* argv[]) {
             case 'p': port = atoi(argv[i+1]); break;
             case 's': sscanf(argv[i+1], "%dx%d", &width, &height); break;
             case 'f': fps = atoi(argv[i+1]); break;
+            case 'i': strcpy(display, argv[i+1]); break;
             default: exit_usage(argv[0]);
         }
     }
