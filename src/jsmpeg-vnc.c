@@ -1,9 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "libavutil/avutil.h"
-#include "libavcodec/avcodec.h"
-#include "libswscale/swscale.h"
 
 
 void exit_usage(char *self_name) {
