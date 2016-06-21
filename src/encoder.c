@@ -28,19 +28,19 @@ encoder_t *encoder_create(int in_width, int in_height, int out_width, int out_he
 	self->context->time_base.den = 30;
 	self->context->gop_size = 30;
 	self->context->max_b_frames = 0;
-	self->context->pix_fmt = PIX_FMT_YUV420P;
+	self->context->pix_fmt = AV_PIX_FMT_YUV420P;
 
 	avcodec_open2(self->context, self->codec, NULL);
 
-	self->frame = avcodec_alloc_frame();
-	self->frame->format = PIX_FMT_YUV420P;
+	self->frame = av_alloc_frame();
+	self->frame->format = AV_PIX_FMT_YUV420P;
 	self->frame->width  = out_width;
 	self->frame->height = out_height;
 	self->frame->pts = 0;
 
-	int frame_size = avpicture_get_size(PIX_FMT_YUV420P, out_width, out_height);
+	int frame_size = avpicture_get_size(AV_PIX_FMT_YUV420P, out_width, out_height);
 	self->frame_buffer = malloc(frame_size);
-	avpicture_fill((AVPicture*)self->frame, (uint8_t*)self->frame_buffer, PIX_FMT_YUV420P, out_width, out_height);
+	avpicture_fill((AVPicture*)self->frame, (uint8_t*)self->frame_buffer, AV_PIX_FMT_YUV420P, out_width, out_height);
 
 	self->sws = sws_getContext(
 		in_width, in_height, AV_PIX_FMT_RGB32,
