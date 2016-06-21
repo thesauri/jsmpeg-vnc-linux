@@ -1,15 +1,15 @@
-SRC=src/jsmpeg-vnc.c src/encoder.c
+SRC = src/jsmpeg-vnc.c src/encoder.c
 
-INC=-Isrc/ -Isrc/ffmpeg/include/ -Isrc/libwebsockets/
+INC = -Isrc/ -Isrc/libwebsockets/
 
-LIB=src/ffmpeg/lib/libavutil.a src/ffmpeg/lib/libavcodec.a \
-	src/ffmpeg/lib/libswscale.a \
-	src/libwebsockets/libwebsockets.a
+LIB_DIRS = -Lsrc/libwebsockets/
 
-X11 := $(shell pkg-config --cflags --libs x11)
+FFMPEG = $(shell pkg-config --cflags --libs libavcodec libavutil libswscale)
 
-OUT=-o bin/jsmpeg-vnc
-VER=-std=c11
+X11 = $(shell pkg-config --cflags --libs x11)
+
+OUT = -o bin/jsmpeg-vnc
+VER= -std=c11
 
 jsmpeg-vnc-linux: src/jsmpeg-vnc.c
-	gcc ${OUT} ${SRC} ${INC} ${LIB} ${X11} ${VER}
+	gcc ${OUT} ${SRC} ${INC} ${LIB_DIRS} ${FFMPEG} ${X11} ${VER}
