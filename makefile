@@ -1,6 +1,6 @@
-SRC=src/jsmpeg-vnc.c
+SRC=src/jsmpeg-vnc.c src/encoder.c
 
-INC=-Isrc/ffmpeg/include/ -Isrc/libwebsockets/
+INC=-Isrc/ -Isrc/ffmpeg/include/ -Isrc/libwebsockets/
 
 LIB=src/ffmpeg/lib/libavutil.a src/ffmpeg/lib/libavcodec.a \
 	src/ffmpeg/lib/libswscale.a \
