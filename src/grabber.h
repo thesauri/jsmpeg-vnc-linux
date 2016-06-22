@@ -7,7 +7,7 @@ typedef struct {
 	int width;
 	int height;
 
-	void *pixels;
+	char *pixels;
   int pixels_size;
 } grabber_t;
 
