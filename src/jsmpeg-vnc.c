@@ -77,5 +77,7 @@ int main(int argc, char* argv[]) {
     fwrite(grabber->pixels, 1, grabber->pixels_size, file);
     fclose(file);
 
+    printf("File written..?\n");
+
     return 0;
 }
