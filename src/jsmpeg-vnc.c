@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
     grabber_t *grabber = grabber_create(display, window);
 
     FILE *file = fopen("out.bin", "w+");
-    fwrite(self->pixels, 1, pixels->pixels_size, file);
+    fwrite(grabber->pixels, 1, grabber->pixels_size, file);
     fclose(file);
 
     return 0;
