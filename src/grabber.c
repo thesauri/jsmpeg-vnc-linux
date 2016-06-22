@@ -18,3 +18,10 @@ grabber_t *grabber_create(Display *display, Window window) {
 
   return self;
 }
+
+void grabber_destroy(grabber_t *self) {
+  if (self != NULL) {
+    //free(self->pixels);
+    free(self);
+  }
+}

@@ -11,3 +11,4 @@ typedef struct {
 } grabber_t;
 
 grabber_t *grabber_create(Display *display, Window window);
+void grabber_destroy(grabber_t *self);
