@@ -83,5 +83,5 @@ void encoder_encode(encoder_t *self, void *rgb_pixels, void *encoded_data, size_
 			printf("Frame too large for buffer (size: %d needed: %d)\n", available_size, self->packet.size);
 		}
 	}
-	av_free_packet(&self->packet);
+	av_packet_unref(&self->packet);
 }
