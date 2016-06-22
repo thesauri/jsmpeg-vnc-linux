@@ -4,6 +4,8 @@
 #include <X11/Xlib.h>
 #include <X11/X.h>
 
+#include "grabber.h"
+
 void exit_usage(char *self_name) {
     printf(
            "Usage: %s [options] <window name>\n\n"
@@ -68,6 +70,12 @@ int main(int argc, char* argv[]) {
       printf("Window from window title not implemented yet..\n");
       return 0;
     }
+
+    grabber_t *grabber = grabber_create(display, window);
+
+    FILE *file = fopen("out.bin", "w+");
+    fwrite(self->pixels, 1, pixels->pixels_size, file);
+    fclose(file);
 
     return 0;
 }
