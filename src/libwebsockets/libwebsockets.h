@@ -26,6 +26,10 @@
 extern "C" {
 #include <cstddef>
 #endif
+	
+#ifdef CMAKE_BUILD
+#include "lws_config.h"
+#endif
 
 #if defined(WIN32) || defined(_WIN32)
 
@@ -36,24 +40,9 @@ extern "C" {
 #include <ws2tcpip.h>
 #include <stddef.h>
 #include <basetsd.h>
-#include "websock-w32.h"
 
 #define strcasecmp stricmp
 #define getdtablesize() 30000
-
-#ifdef __MINGW64__
-#else
-#ifdef __MINGW32__
-#else
-
-#ifndef __SSIZE_T
-#define __SSIZE_T
-
-typedef SSIZE_T ssize_t;
-
-#endif // __SSIZE_T
-#endif
-#endif
 
 #define LWS_VISIBLE
 
@@ -69,10 +58,6 @@ typedef SSIZE_T ssize_t;
 
 #else // NOT WIN32
 
-/* to get ppoll() */
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
 #include <poll.h>
 #include <unistd.h>
 
@@ -84,13 +69,24 @@ typedef SSIZE_T ssize_t;
 
 #endif
 
+#ifdef LWS_USE_LIBEV
+#include <ev.h>
+#endif /* LWS_USE_LIBEV */
+
 #include <assert.h>
 
 #ifndef LWS_EXTERN
 #define LWS_EXTERN extern
 #endif
+	
+#ifdef _WIN32
+#define random rand
+#else
+#include <sys/time.h>
+#include <unistd.h>
+#endif
 
-#define CONTEXT_PORT_NO_LISTEN 0
+#define CONTEXT_PORT_NO_LISTEN -1
 #define MAX_MUX_RECURSION 2
 
 enum lws_log_levels {
@@ -145,10 +141,18 @@ LWS_VISIBLE LWS_EXTERN void lwsl_hexdump(void *buf, size_t len);
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
+/* api change list for user code to test against */
+
+#define LWS_FEATURE_SERVE_HTTP_FILE_HAS_OTHER_HEADERS_ARG
+
+
 enum libwebsocket_context_options {
 	LWS_SERVER_OPTION_REQUIRE_VALID_OPENSSL_CLIENT_CERT = 2,
 	LWS_SERVER_OPTION_SKIP_SERVER_CANONICAL_NAME = 4,
-	LWS_SERVER_OPTION_ALLOW_NON_SSL_ON_SSL_PORT = 8
+	LWS_SERVER_OPTION_ALLOW_NON_SSL_ON_SSL_PORT = 8,
+	LWS_SERVER_OPTION_LIBEV = 16,
+	LWS_SERVER_OPTION_DISABLE_IPV6 = 32,
+	LWS_SERVER_OPTION_DISABLE_OS_CA_CERTS = 64,
 };
 
 enum libwebsocket_callback_reasons {
@@ -202,8 +206,16 @@ struct libwebsocket_pollargs {
     int prev_events;   // the previous event mask
 };
 
+#ifdef _WIN32
+struct libwebsocket_pollfd {
+	SOCKET fd;
+	SHORT events;
+	SHORT revents;
+};
+#else
+#define libwebsocket_pollfd pollfd
+#endif
 
-#ifndef LWS_NO_EXTENSIONS
 enum libwebsocket_extension_callback_reasons {
 	LWS_EXT_CALLBACK_SERVER_CONTEXT_CONSTRUCT,
 	LWS_EXT_CALLBACK_CLIENT_CONTEXT_CONSTRUCT,
@@ -229,7 +241,6 @@ enum libwebsocket_extension_callback_reasons {
 	LWS_EXT_CALLBACK_PAYLOAD_TX,
 	LWS_EXT_CALLBACK_PAYLOAD_RX,
 };
-#endif
 
 enum libwebsocket_write_protocol {
 	LWS_WRITE_TEXT,
@@ -269,6 +280,7 @@ struct lws_tokens {
 enum lws_token_indexes {
 	WSI_TOKEN_GET_URI,
 	WSI_TOKEN_POST_URI,
+	WSI_TOKEN_OPTIONS_URI,
 	WSI_TOKEN_HOST,
 	WSI_TOKEN_CONNECTION,
 	WSI_TOKEN_KEY1,
@@ -294,7 +306,9 @@ enum lws_token_indexes {
 
 	/* http-related */
 	WSI_TOKEN_HTTP_ACCEPT,
+	WSI_TOKEN_HTTP_AC_REQUEST_HEADERS,
 	WSI_TOKEN_HTTP_IF_MODIFIED_SINCE,
+	WSI_TOKEN_HTTP_IF_NONE_MATCH,
 	WSI_TOKEN_HTTP_ACCEPT_ENCODING,
 	WSI_TOKEN_HTTP_ACCEPT_LANGUAGE,
 	WSI_TOKEN_HTTP_PRAGMA,
@@ -327,6 +341,10 @@ enum lws_token_indexes {
 	WSI_TOKEN_SKIPPING_SAW_CR,
 	WSI_PARSING_COMPLETE,
 	WSI_INIT_TOKEN_MUXURL,
+};
+
+struct lws_token_limits {
+    unsigned short token_limit[WSI_TOKEN_COUNT];
 };
 
 /*
@@ -437,6 +455,7 @@ enum lws_close_status {
 
 enum http_status {
 	HTTP_STATUS_OK = 200,
+	HTTP_STATUS_NO_CONTENT = 204,
 
 	HTTP_STATUS_BAD_REQUEST = 400,
 	HTTP_STATUS_UNAUTHORIZED,
@@ -906,6 +925,8 @@ struct libwebsocket_extension {
  * @extensions: NULL or array of libwebsocket_extension structs listing the
  *		extensions this context supports.  If you configured with
  *		--without-extensions, you should give NULL here.
+ * @token_limits: NULL or struct lws_token_limits pointer which is initialized
+ *      with a token length limit for each possible WSI_TOKEN_*** 
  * @ssl_cert_filepath:	If libwebsockets was compiled to use ssl, and you want
  *			to listen using SSL, set to the filepath to fetch the
  *			server cert from, otherwise NULL for unencrypted
@@ -934,10 +955,13 @@ struct lws_context_creation_info {
 	const char *iface;
 	struct libwebsocket_protocols *protocols;
 	struct libwebsocket_extension *extensions;
+    struct lws_token_limits *token_limits;
 	const char *ssl_cert_filepath;
 	const char *ssl_private_key_filepath;
 	const char *ssl_ca_filepath;
 	const char *ssl_cipher_list;
+	const char *http_proxy_address;
+	unsigned int http_proxy_port;
 	int gid;
 	int uid;
 	unsigned int options;
@@ -967,9 +991,22 @@ libwebsocket_context_destroy(struct libwebsocket_context *context);
 LWS_VISIBLE LWS_EXTERN int
 libwebsocket_service(struct libwebsocket_context *context, int timeout_ms);
 
+LWS_VISIBLE LWS_EXTERN void
+libwebsocket_cancel_service(struct libwebsocket_context *context);
+
+#ifdef LWS_USE_LIBEV
+LWS_VISIBLE LWS_EXTERN int
+libwebsocket_initloop(
+	struct libwebsocket_context *context, struct ev_loop *loop);
+
+LWS_VISIBLE void
+libwebsocket_sigint_cb(
+	struct ev_loop *loop, struct ev_signal *watcher, int revents);
+#endif /* LWS_USE_LIBEV */
+
 LWS_VISIBLE LWS_EXTERN int
 libwebsocket_service_fd(struct libwebsocket_context *context,
-							 struct pollfd *pollfd);
+							 struct libwebsocket_pollfd *pollfd);
 
 LWS_VISIBLE LWS_EXTERN void *
 libwebsocket_context_user(struct libwebsocket_context *context);
@@ -986,6 +1023,7 @@ enum pending_timeout {
 	PENDING_TIMEOUT_SENT_CLIENT_HANDSHAKE,
 	PENDING_TIMEOUT_SSL_ACCEPT,
 	PENDING_TIMEOUT_HTTP_CONTENT,
+	PENDING_TIMEOUT_AWAITING_CLIENT_HS_SEND,
 };
 
 LWS_VISIBLE LWS_EXTERN void
@@ -1032,13 +1070,8 @@ libwebsocket_write(struct libwebsocket *wsi, unsigned char *buf, size_t len,
 				     enum libwebsocket_write_protocol protocol);
 
 /* helper for case where buffer may be const */
-static inline int
-libwebsocket_write_http(struct libwebsocket *wsi,
-				const unsigned char *buf, size_t len)
-{
-	return libwebsocket_write(wsi, (unsigned char *)buf, len,
-							LWS_WRITE_HTTP);
-}
+#define libwebsocket_write_http(wsi, buf, len) \
+	libwebsocket_write(wsi, (unsigned char *)(buf), len, LWS_WRITE_HTTP)
 
 LWS_VISIBLE LWS_EXTERN int
 libwebsockets_serve_http_file(struct libwebsocket_context *context,
