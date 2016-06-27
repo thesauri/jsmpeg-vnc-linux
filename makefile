@@ -4,7 +4,7 @@ INC = -Isrc/ -Isrc/libwebsockets/
 
 ZLIB = $(shell pkg-config --cflags --libs zlib)
 
-LIBWEBSOCKETS = src/libwebsockets/libwebsockets.a
+LIBWEBSOCKETS = $(shell pkg-config --cflags --libs libwebsockets)
 
 FFMPEG = $(shell pkg-config --cflags --libs libavcodec libavutil libswscale)
 
