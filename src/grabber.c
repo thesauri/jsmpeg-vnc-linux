@@ -40,7 +40,7 @@ void *grabber_grab(grabber_t *self) {
 
   memcpy(self->pixels, image->data, self->pixels_size);
 
-  //XDestroyImage(image);
+  XDestroyImage(image);
 
   return self->pixels;
 }
