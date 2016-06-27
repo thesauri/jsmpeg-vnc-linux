@@ -155,6 +155,8 @@ void app_on_message(app_t *self, struct libwebsocket *socket, void *data, size_t
 
 		event = createKeyEvent(self->display, winFocus, self->window, 0, input->key_code, 0);
    	XSendEvent(event.display, event.window, 1, KeyPressMask, (XEvent *)&event);
+
+		printf("\nSent key with code %d\n", event.keycode);
 	}
 	else if( type & input_type_mouse && len >= sizeof(input_mouse_t) ) {
 		input_mouse_t *input = (input_mouse_t *)data;
@@ -209,7 +211,7 @@ void app_run(app_t *self, int target_fps) {
 
       double encode_time = time_since(start);
 
-			printf("fps:%3d (grabbing:%6.2fms, scaling/encoding:%6.2fms)\n", (int)fps, grab_time, encode_time);
+			printf("fps:%3d (grabbing:%6.2fms, scaling/encoding:%6.2fms)\r", (int)fps, grab_time, encode_time);
 
 			//Reset the clock
 			start = clock();
