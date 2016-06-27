@@ -69,6 +69,9 @@ app_t *app_create(Display *display, Window window, int port, int bit_rate, int o
 	app_t *self = (app_t *)malloc(sizeof(app_t));
 	memset(self, 0, sizeof(app_t));
 
+	self->display = display;
+	self->window = window;
+
 	self->mouse_speed = APP_MOUSE_SPEED;
 	self->grabber = grabber_create(display, window);
 
@@ -147,7 +150,7 @@ void app_on_message(app_t *self, struct libwebsocket *socket, void *data, size_t
 		int revert;
 		XGetInputFocus(display, &winfocus, &revert);
 
-		
+
 
 	}
 	else if( type & input_type_mouse && len >= sizeof(input_mouse_t) ) {
