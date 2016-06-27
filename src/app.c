@@ -148,10 +148,13 @@ void app_on_message(app_t *self, struct libwebsocket *socket, void *data, size_t
 
 		Window winFocus;
 		int revert;
-		XGetInputFocus(display, &winfocus, &revert);
+		XGetInputFocus(self->display, &winFocus, &revert);
 
+		XKeyEvent event = createKeyEvent(self->display, winFocus, self->window, 1, input->key_code, 0);
+		XSendEvent(event.display, event.window, 1, KeyPressMask, (XEvent *) &event);
 
-
+		event = createKeyEvent(self->display, winFocus, self->window, 0, input->key_code, 0);
+   	XSendEvent(event.display, event.window, 1, KeyPressMask, (XEvent *)&event);
 	}
 	else if( type & input_type_mouse && len >= sizeof(input_mouse_t) ) {
 		input_mouse_t *input = (input_mouse_t *)data;
