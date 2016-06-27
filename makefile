@@ -2,7 +2,7 @@ SRC = src/jsmpeg-vnc.c src/encoder.c src/grabber.c src/server.c
 
 INC = -Isrc/ -Isrc/libwebsockets/
 
-ZLIB = $(shell pkg-config --cflags --libs libz)
+ZLIB = $(shell pkg-config --cflags --libs zlib)
 
 LIBWEBSOCKETS = src/libwebsockets/libwebsockets.a
 
