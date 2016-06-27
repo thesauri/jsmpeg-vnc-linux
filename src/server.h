@@ -1,7 +1,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include "libwebsockets/libwebsockets.h"
+#include <libwebsockets.h>
 
 typedef struct server_client_t {
 	struct libwebsocket *socket;
