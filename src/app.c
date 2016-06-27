@@ -227,13 +227,16 @@ void app_run(app_t *self, int target_fps) {
         frame->size = swap_int32(sizeof(jsmpeg_frame_t) + encoded_size);
         server_broadcast(self->server, frame, sizeof(jsmpeg_frame_t) + encoded_size, server_type_binary);
       }
+
       double encode_time = time_since(start);
 
-			printf("fps:%3d (grabbing:%6.2fms, scaling/encoding:%6.2fms)\r", (int)fps, grab_time, encode_time);
+			printf("fps:%3d (grabbing:%6.2fms, scaling/encoding:%6.2fms)\n", (int)fps, grab_time, encode_time);
+
+			//Reset the clock
+			start = clock();
 		}
 
 		server_update(self->server);
-		usleep(1000);
 	}
 
 	free(frame);
