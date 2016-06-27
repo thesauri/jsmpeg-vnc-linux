@@ -4,6 +4,7 @@
 #include <X11/Xlib.h>
 #include <X11/X.h>
 
+#include "app.h"
 #include "grabber.h"
 
 void exit_usage(char *self_name) {
@@ -36,7 +37,8 @@ int main(int argc, char* argv[]) {
         fps = 60,
         port = 8080,
         width = 0,
-        height = 0;
+        height = 0,
+        dump = 0;
 
     char display_name[32];
 
@@ -52,6 +54,7 @@ int main(int argc, char* argv[]) {
             case 's': sscanf(argv[i+1], "%dx%d", &width, &height); break;
             case 'f': fps = atoi(argv[i+1]); break;
             case 'i': strcpy(display_name, argv[i+1]); break;
+            case 'd': dump = 0; break;
             default: exit_usage(argv[0]);
         }
     }
@@ -71,13 +74,38 @@ int main(int argc, char* argv[]) {
       return 0;
     }
 
-    grabber_t *grabber = grabber_create(display, window);
+    if (dump) {
+      grabber_t *grabber = grabber_create(display, window);
 
-    FILE *file = fopen("out.bin", "w+");
-    fwrite(grabber->pixels, 1, grabber->pixels_size, file);
-    fclose(file);
+      FILE *file = fopen("out.bin", "w+");
+      fwrite(grabber->pixels, 1, grabber->pixels_size, file);
+      fclose(file);
 
-    printf("File written..?\n");
+      printf("Screenshot dumped to out.bin\n");
 
-    return 0;
+      return 0;
+    } else {
+      app_t *app = app_create(display, window, port, bit_rate, width, height);
+
+    	if( !app ) {
+    		return 1;
+    	}
+
+      printf(
+    		//"Window 0x%08x: \"%s\"\n"
+    		"Window size: %dx%d, output size: %dx%d, bit rate: %d kb/s\n\n"
+    		"Server started on: http://%s:%d/\n\n",
+    		//window, real_window_title,
+    		app->grabber->width, app->grabber->height,
+    		app->encoder->out_width, app->encoder->out_height,
+    		app->encoder->context->bit_rate / 1000,
+    		server_get_host_address(app->server), app->server->port
+      );
+
+      app_run(app, fps);
+
+	    app_destroy(app);
+
+      return 0;
+    }
 }
