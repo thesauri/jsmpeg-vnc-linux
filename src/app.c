@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <X11/extensions/XTest.h>
 
 #include "app.h"
 #include "jskeycode2x11keycode.h"
@@ -153,34 +154,28 @@ void app_on_close(app_t *self, struct libwebsocket *socket) {
 void app_on_message(app_t *self, struct libwebsocket *socket, void *data, size_t len) {
 	input_type_t type = (input_type_t)((unsigned short *)data)[0];
 
+	Window winFocus;
+	int revert;
+	XGetInputFocus(self->display, &winFocus, &revert);
+
+	Window root_return, child_return;
+	int x_root, y_root;
+	int x_win, y_win;
+	unsigned int state_mask; //Indicates what modifier keys are pressed down
+	XQueryPointer(self->display, winFocus, &root_return, &child_return,
+		&x_root, &y_root, &x_win, &y_win, &state_mask);
+
 	if( type & input_type_key && len >= sizeof(input_key_t) ) {
 		input_key_t *input = (input_key_t *)data;
 
-		Window winFocus;
-		int revert;
-		XGetInputFocus(self->display, &winFocus, &revert);
-
-		XKeyEvent event;
-
-		/* Indicates what modifier keys are pressed down (such as shift)
-			 https://tronche.com/gui/x/xlib/events/keyboard-pointer/keyboard-pointer.html */
-		Window root_return, child_return;
-    int root_x_return, root_y_return;
-    int win_x_return, win_y_return;
-		unsigned int keyboard_state_mask;
-		XQueryPointer(self->display, winFocus, &root_return, &child_return,
-			&root_x_return, &root_y_return, &win_x_return, &win_y_return, &keyboard_state_mask);
-
-		printf("Mouse at: %dx%d\n", root_x_return, root_y_return);
-
 		if( input->state == key_down ) {
-			event = createKeyEvent(self->display, winFocus, self->window, 1, input->key_code, keyboard_state_mask);
+			XKeyEvent event = createKeyEvent(self->display, winFocus, self->window, 1, input->key_code, state_mask);
 			XSendEvent(event.display, event.window, 1, KeyPressMask, (XEvent *) &event);
-			printf("\nSent key down with code %d with mask %d (received %d)\n", event.keycode, keyboard_state_mask, input->key_code);
+			printf("\nSent key down with code %d with mask %d (received %d)\n", event.keycode, state_mask, input->key_code);
 		} else if( input->state == key_up) {
-			event = createKeyEvent(self->display, winFocus, self->window, 0, input->key_code, keyboard_state_mask);
+			XKeyEvent event = createKeyEvent(self->display, winFocus, self->window, 0, input->key_code, state_mask);
 	   	XSendEvent(event.display, event.window, 1, KeyPressMask, (XEvent *)&event);
-			printf("\nSent key up with code %d with mask %d (received %d)\n", event.keycode, keyboard_state_mask, input->key_code);
+			printf("\nSent key up with code %d with mask %d (received %d)\n", event.keycode, state_mask, input->key_code);
 		}
 	}
 	else if( type & input_type_mouse && len >= sizeof(input_mouse_t) ) {
@@ -201,6 +196,11 @@ void app_on_message(app_t *self, struct libwebsocket *socket, void *data, size_t
 		}
 
 		if( type & input_type_mouse_button ) {
+
+			unsigned int button = (input->flags & (mouse_1_down | mouse_1_up)) ? 1 : 3;
+			_Bool pressed = ((input->flags & (mouse_1_down | mouse_2_down)) != 0);
+
+			XTestFakeButtonEvent(self->display, button, pressed, CurrentTime);
 
 		}
 	}
@@ -258,7 +258,7 @@ double time_since(clock_t start) {
   return (clock() - start) * 1000 / CLOCKS_PER_SEC;
 }
 
-XKeyEvent createKeyEvent(Display *display, Window win, Window winRoot, _Bool press, int keycode, int modifiers) {
+XKeyEvent createKeyEvent(Display *display, Window win, Window winRoot, _Bool press, int keycode, int state_mask) {
 	XKeyEvent event;
 
 	event.display     = display;
@@ -272,7 +272,7 @@ XKeyEvent createKeyEvent(Display *display, Window win, Window winRoot, _Bool pre
 	event.y_root      = 1;
 	event.same_screen = True;
 	event.keycode     = js_keycode_to_x11keycode(display, (unsigned short) keycode);
-	event.state       = modifiers;
+	event.state       = state_mask;
 
 	if (press) {
 		event.type = KeyPress;

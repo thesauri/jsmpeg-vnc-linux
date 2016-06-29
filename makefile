@@ -8,7 +8,7 @@ LIBWEBSOCKETS = $(shell pkg-config --cflags --libs libwebsockets)
 
 FFMPEG = $(shell pkg-config --cflags --libs libavcodec libavutil libswscale)
 
-X11 = $(shell pkg-config --cflags --libs x11)
+X11 = $(shell pkg-config --cflags --libs x11) -lXtst
 
 OUT = -o bin/jsmpeg-vnc
 VER= -std=c11
