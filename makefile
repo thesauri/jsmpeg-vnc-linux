@@ -1,4 +1,4 @@
-SRC = src/jsmpeg-vnc.c src/encoder.c src/grabber.c src/server.c src/app.c
+SRC = src/jsmpeg-vnc.c src/encoder.c src/grabber.c src/server.c src/app.c src/jskeycode2x11keycode.c
 
 INC = -Isrc/ -Isrc/libwebsockets/
 
