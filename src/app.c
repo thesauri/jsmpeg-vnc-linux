@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include "app.h"
+#include "jskeycode2x11keycode.h"
 
 typedef enum {
 	jsmpeg_frame_type_video = 0xFA010000,
@@ -161,21 +162,38 @@ void app_on_message(app_t *self, struct libwebsocket *socket, void *data, size_t
 
 		XKeyEvent event;
 
+		/* Indicates what modifier keys are pressed down (such as shift)
+			 https://tronche.com/gui/x/xlib/events/keyboard-pointer/keyboard-pointer.html */
+		Window root_return, child_return;
+    int root_x_return, root_y_return;
+    int win_x_return, win_y_return;
+		unsigned int keyboard_state_mask;
+		XQueryPointer(self->display, winFocus, &root_return, &child_return,
+			&root_x_return, &root_y_return, &win_x_return, &win_y_return, &keyboard_state_mask);
+
+		printf("Mouse at: %dx%d\n", root_x_return, root_y_return);
+
 		if( input->state == key_down ) {
-			event = createKeyEvent(self->display, winFocus, self->window, 1, input->key_code, 0);
+			event = createKeyEvent(self->display, winFocus, self->window, 1, input->key_code, keyboard_state_mask);
 			XSendEvent(event.display, event.window, 1, KeyPressMask, (XEvent *) &event);
-			printf("\nSent key down with code %d\n", event.keycode);
+			printf("\nSent key down with code %d with mask %d (received %d)\n", event.keycode, keyboard_state_mask, input->key_code);
 		} else if( input->state == key_up) {
-			event = createKeyEvent(self->display, winFocus, self->window, 0, input->key_code, 0);
+			event = createKeyEvent(self->display, winFocus, self->window, 0, input->key_code, keyboard_state_mask);
 	   	XSendEvent(event.display, event.window, 1, KeyPressMask, (XEvent *)&event);
-			printf("\nSent key up with code %d\n", event.keycode);
+			printf("\nSent key up with code %d with mask %d (received %d)\n", event.keycode, keyboard_state_mask, input->key_code);
 		}
 	}
 	else if( type & input_type_mouse && len >= sizeof(input_mouse_t) ) {
 		input_mouse_t *input = (input_mouse_t *)data;
 
 		if( type & input_type_mouse_absolute ) {
+			float scale_x = ((float) self->encoder->in_width / self->encoder->out_width);
+			float scale_y = ((float) self->encoder->in_height / self->encoder->out_height);
 
+			int x = (int) input->x * scale_x;
+			int y = (int) input->y * scale_y;
+
+			XWarpPointer(self->display, self->window, self->window, 0, 0, 0, 0, x, y);
 		}
 
 		if( type & input_type_mouse_relative ) {
@@ -253,7 +271,7 @@ XKeyEvent createKeyEvent(Display *display, Window win, Window winRoot, _Bool pre
 	event.x_root      = 1;
 	event.y_root      = 1;
 	event.same_screen = True;
-	event.keycode     = XKeysymToKeycode(display, keycode);
+	event.keycode     = js_keycode_to_x11keycode(display, (unsigned short) keycode);
 	event.state       = modifiers;
 
 	if (press) {
