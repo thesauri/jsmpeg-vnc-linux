@@ -40,7 +40,7 @@ typedef enum {
 typedef struct {
 	unsigned short type;
 	unsigned short state;
-	unsigned short key_code;
+	unsigned short keycode;
 } input_key_t;
 
 typedef struct {
@@ -154,29 +154,13 @@ void app_on_close(app_t *self, struct libwebsocket *socket) {
 void app_on_message(app_t *self, struct libwebsocket *socket, void *data, size_t len) {
 	input_type_t type = (input_type_t)((unsigned short *)data)[0];
 
-	Window winFocus;
-	int revert;
-	XGetInputFocus(self->display, &winFocus, &revert);
-
-	Window root_return, child_return;
-	int x_root, y_root;
-	int x_win, y_win;
-	unsigned int state_mask; //Indicates what modifier keys are pressed down
-	XQueryPointer(self->display, winFocus, &root_return, &child_return,
-		&x_root, &y_root, &x_win, &y_win, &state_mask);
-
 	if( type & input_type_key && len >= sizeof(input_key_t) ) {
 		input_key_t *input = (input_key_t *)data;
 
-		if( input->state == key_down ) {
-			XKeyEvent event = createKeyEvent(self->display, winFocus, self->window, 1, input->key_code, state_mask);
-			XSendEvent(event.display, event.window, 1, KeyPressMask, (XEvent *) &event);
-			printf("\nSent key down with code %d with mask %d (received %d)\n", event.keycode, state_mask, input->key_code);
-		} else if( input->state == key_up) {
-			XKeyEvent event = createKeyEvent(self->display, winFocus, self->window, 0, input->key_code, state_mask);
-	   	XSendEvent(event.display, event.window, 1, KeyPressMask, (XEvent *)&event);
-			printf("\nSent key up with code %d with mask %d (received %d)\n", event.keycode, state_mask, input->key_code);
-		}
+		_Bool pressed = (input->state == key_down);
+		KeyCode x11keycode = js_keycode_to_x11keycode(self->display, (unsigned short) input->keycode);
+		XTestFakeKeyEvent (self->display, x11keycode, pressed, 0);
+
 	}
 	else if( type & input_type_mouse && len >= sizeof(input_mouse_t) ) {
 		input_mouse_t *input = (input_mouse_t *)data;
