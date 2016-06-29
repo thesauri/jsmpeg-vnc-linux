@@ -33,6 +33,4 @@ void app_on_message(app_t *self, struct libwebsocket *socket, void *data, size_t
 
 double time_since(clock_t start);
 
-XKeyEvent createKeyEvent(Display *display, Window win, Window winRoot, _Bool press, int keycode, int modifiers);
-
 #endif

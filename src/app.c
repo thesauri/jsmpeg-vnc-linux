@@ -241,28 +241,3 @@ void app_run(app_t *self, int target_fps) {
 double time_since(clock_t start) {
   return (clock() - start) * 1000 / CLOCKS_PER_SEC;
 }
-
-XKeyEvent createKeyEvent(Display *display, Window win, Window winRoot, _Bool press, int keycode, int state_mask) {
-	XKeyEvent event;
-
-	event.display     = display;
-	event.window      = win;
-	event.root        = winRoot;
-	event.subwindow   = None;
-	event.time        = CurrentTime;
-	event.x           = 1;
-	event.y           = 1;
-	event.x_root      = 1;
-	event.y_root      = 1;
-	event.same_screen = True;
-	event.keycode     = js_keycode_to_x11keycode(display, (unsigned short) keycode);
-	event.state       = state_mask;
-
-	if (press) {
-		event.type = KeyPress;
-	} else {
-		event.type = KeyRelease;
-	}
-
-	return event;
-}
