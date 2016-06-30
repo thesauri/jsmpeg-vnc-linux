@@ -16,7 +16,8 @@ void exit_usage(char *self_name) {
            "	-s output size as WxH. E.g: -s 640x480 (default: same as window size)\n"
            "	-f target framerate (default: 60)\n"
            "	-p port (default: 8080)\n"
-           "  -d dump screen data to out.bin\n\n"
+           "  -d dump screen data to out.bin\n"
+           "  -i target display as hostname:number.screen_number\n\n"
 
            "Use \"desktop\" as the window name to capture the whole Desktop. Use \"cursor\"\n"
            "to capture the window at the current cursor position.\n\n"
@@ -41,7 +42,7 @@ int main(int argc, char* argv[]) {
         height = 0,
         dump = 0;
 
-    char display_name[32];
+    char *display_name;
 
     // Parse command line options
     for (int i = 1; i < argc-1; i+=2) {
@@ -54,7 +55,7 @@ int main(int argc, char* argv[]) {
             case 'p': port = atoi(argv[i+1]); break;
             case 's': sscanf(argv[i+1], "%dx%d", &width, &height); break;
             case 'f': fps = atoi(argv[i+1]); break;
-            case 'i': strcpy(display_name, argv[i+1]); break;
+            case 'i': display_name = argv[i+1]; break;
             case 'd': dump = 1; break;
             default: exit_usage(argv[0]);
         }
