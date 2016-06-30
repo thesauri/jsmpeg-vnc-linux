@@ -15,7 +15,8 @@ void exit_usage(char *self_name) {
            "	-b bitrate in kilobit/s (default: estimated by output size)\n"
            "	-s output size as WxH. E.g: -s 640x480 (default: same as window size)\n"
            "	-f target framerate (default: 60)\n"
-           "	-p port (default: 8080)\n\n"
+           "	-p port (default: 8080)\n"
+           "  -d dump screen data to out.bin\n\n"
 
            "Use \"desktop\" as the window name to capture the whole Desktop. Use \"cursor\"\n"
            "to capture the window at the current cursor position.\n\n"
@@ -54,7 +55,7 @@ int main(int argc, char* argv[]) {
             case 's': sscanf(argv[i+1], "%dx%d", &width, &height); break;
             case 'f': fps = atoi(argv[i+1]); break;
             case 'i': strcpy(display_name, argv[i+1]); break;
-            case 'd': dump = 0; break;
+            case 'd': dump = 1; break;
             default: exit_usage(argv[0]);
         }
     }
@@ -81,7 +82,7 @@ int main(int argc, char* argv[]) {
       fwrite(grabber->pixels, 1, grabber->pixels_size, file);
       fclose(file);
 
-      printf("Screenshot dumped to out.bin\n");
+      printf("Screen data dumped to out.bin\n");
 
       return 0;
     } else {
