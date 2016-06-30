@@ -159,7 +159,11 @@ void app_on_message(app_t *self, struct libwebsocket *socket, void *data, size_t
 
 		_Bool pressed = (input->state == key_down);
 		KeyCode x11keycode = js_keycode_to_x11keycode(self->display, (unsigned short) input->keycode);
-		XTestFakeKeyEvent (self->display, x11keycode, pressed, 0);
+
+		//Skip if the JS keycode couldn't be bound to a X11 keycode
+		if (x11keycode != 0) {
+			XTestFakeKeyEvent(self->display, x11keycode, pressed, 0);
+		}
 
 	}
 	else if( type & input_type_mouse && len >= sizeof(input_mouse_t) ) {
