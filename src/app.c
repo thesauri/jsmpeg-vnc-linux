@@ -47,6 +47,7 @@ typedef struct {
 	unsigned short type;
 	unsigned short flags;
 	float x, y;
+	int amount; //For scrolling
 } input_mouse_t;
 
 typedef enum {
@@ -55,7 +56,8 @@ typedef enum {
 	mouse_1_down = 0x0002,
 	mouse_1_up = 0x0004,
 	mouse_2_down = 0x0008,
-	mouse_2_up = 0x0010
+	mouse_2_up = 0x0010,
+	mouse_scrolling = 0x0800
 } input_state_t;
 
 
@@ -185,11 +187,19 @@ void app_on_message(app_t *self, struct libwebsocket *socket, void *data, size_t
 
 		if( type & input_type_mouse_button ) {
 
-			unsigned int button = (input->flags & (mouse_1_down | mouse_1_up)) ? 1 : 3;
-			_Bool pressed = ((input->flags & (mouse_1_down | mouse_2_down)) != 0);
+			if (input->flags & mouse_scrolling)
+			{
+					unsigned int button = input->amount >= 0 ? 4 : 5;
+					XTestFakeButtonEvent(self->display, button, 1, CurrentTime);
+					XTestFakeButtonEvent(self->display, button, 0, CurrentTime);
+			}
+			else
+			{
+					unsigned int button = (input->flags & (mouse_1_down | mouse_1_up)) ? 1 : 3;
+					_Bool pressed = ((input->flags & (mouse_1_down | mouse_2_down)) != 0);
 
-			XTestFakeButtonEvent(self->display, button, pressed, CurrentTime);
-
+					XTestFakeButtonEvent(self->display, button, pressed, CurrentTime);
+				}
 		}
 	}
 }
