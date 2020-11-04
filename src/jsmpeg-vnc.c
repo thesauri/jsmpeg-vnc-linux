@@ -9,24 +9,24 @@
 
 void exit_usage(char *self_name) {
     printf(
-           "Usage: %s [options] <window name>\n\n"
+                "Usage: %s [options] <window name>\n\n"
 
-           "Options:\n"
-           "	-b bitrate in kilobit/s (default: estimated by output size)\n"
-           "	-s output size as WxH. E.g: -s 640x480 (default: same as window size)\n"
-           "	-f target framerate (default: 60)\n"
-           "	-p port (default: 8080)\n"
-           "  -d dump screen data to out.bin\n"
-           "  -i target display as hostname:number.screen_number\n\n"
+                "Options:\n"
+                "	-b bitrate in kilobit/s (default: estimated by output size)\n"
+                "	-s output size as WxH. E.g: -s 640x480 (default: same as window size)\n"
+                "	-f target framerate (default: 60)\n"
+                "	-p port (default: 8080)\n"
+                "  -d dump screen data to out.bin\n"
+                "  -i target display as hostname:number.screen_number\n\n"
 
-           "Use \"desktop\" as the window name to capture the whole Desktop. Use \"cursor\"\n"
-           "to capture the window at the current cursor position.\n\n"
+                "Use \"desktop\" as the window name to capture the whole Desktop. Use \"cursor\"\n"
+                "to capture the window at the current cursor position.\n\n"
 
-           "To enable mouse lock in the browser (useful for games that require relative\n"
-           "mouse movements, not absolute ones), append \"?mouselock\" at the target URL.\n"
-           "i.e: http://<server-ip>:8080/?mouselock\n\n",
-           self_name
-           );
+                "To enable mouse lock in the browser (useful for games that require relative\n"
+                "mouse movements, not absolute ones), append \"?mouselock\" at the target URL.\n"
+                "i.e: http://<server-ip>:8080/?mouselock\n\n",
+                self_name
+                );
     exit(0);
 }
 
@@ -36,11 +36,11 @@ int main(int argc, char* argv[]) {
     }
 
     int bit_rate = 0,
-        fps = 60,
-        port = 8080,
-        width = 0,
-        height = 0,
-        dump = 0;
+            fps = 60,
+            port = 8080,
+            width = 0,
+            height = 0,
+            dump = 0;
 
     char *display_name;
 
@@ -51,13 +51,13 @@ int main(int argc, char* argv[]) {
         }
 
         switch (argv[i][1]) {
-            case 'b': bit_rate = atoi(argv[i+1]) * 1000; break;
-            case 'p': port = atoi(argv[i+1]); break;
-            case 's': sscanf(argv[i+1], "%dx%d", &width, &height); break;
-            case 'f': fps = atoi(argv[i+1]); break;
-            case 'i': display_name = argv[i+1]; break;
-            case 'd': dump = 1; break;
-            default: exit_usage(argv[0]);
+        case 'b': bit_rate = atoi(argv[i+1]) * 1000; break;
+        case 'p': port = atoi(argv[i+1]); break;
+        case 's': sscanf(argv[i+1], "%dx%d", &width, &height); break;
+        case 'f': fps = atoi(argv[i+1]); break;
+        case 'i': display_name = argv[i+1]; break;
+        case 'd': dump = 1; break;
+        default: exit_usage(argv[0]);
         }
     }
 
@@ -67,47 +67,47 @@ int main(int argc, char* argv[]) {
     Window window;
 
     if (strcmp(window_title, "desktop") == 0) {
-      window = DefaultRootWindow(display);
+        window = DefaultRootWindow(display);
     } else if (strcmp(window_title, "cursor") == 0) {
-      printf("Window at cursor not implemented yet..\n");
-      return 0;
+        printf("Window at cursor not implemented yet..\n");
+        return 0;
     } else {
-      printf("Window from window title not implemented yet..\n");
-      return 0;
+        printf("Window from window title not implemented yet..\n");
+        return 0;
     }
 
     if (dump) {
-      grabber_t *grabber = grabber_create(display, window);
+        grabber_t *grabber = grabber_create(display, window);
 
-      FILE *file = fopen("out.bin", "w+");
-      fwrite(grabber->pixels, 1, grabber->pixels_size, file);
-      fclose(file);
+        FILE *file = fopen("out.bin", "w+");
+        fwrite(grabber->pixels, 1, grabber->pixels_size, file);
+        fclose(file);
 
-      printf("Screen data dumped to out.bin\n");
+        printf("Screen data dumped to out.bin\n");
 
-      return 0;
+        return 0;
     } else {
-      app_t *app = app_create(display, window, port, bit_rate, width, height);
+        app_t *app = app_create(display, window, port, bit_rate, width, height);
 
-    	if( !app ) {
-    		return 1;
-    	}
+        if( !app ) {
+            return 1;
+        }
 
-      printf(
-    		//"Window 0x%08x: \"%s\"\n"
-    		"Window size: %dx%d, output size: %dx%d, bit rate: %d kb/s\n\n"
-    		"Server started on: http://%s:%d/\n\n",
-    		//window, real_window_title,
-    		app->grabber->width, app->grabber->height,
-    		app->encoder->out_width, app->encoder->out_height,
-    		app->encoder->context->bit_rate / 1000,
-    		server_get_host_address(app->server), app->server->port
-      );
+        printf(
+                    //"Window 0x%08x: \"%s\"\n"
+                    "Window size: %dx%d, output size: %dx%d, bit rate: %d kb/s\n\n"
+                    "Server started on: http://%s:%d/\n\n",
+                    //window, real_window_title,
+                    app->grabber->width, app->grabber->height,
+                    app->encoder->out_width, app->encoder->out_height,
+                    app->encoder->context->bit_rate / 1000,
+                    server_get_host_address(app->server), app->server->port
+                    );
 
-      app_run(app, fps);
+        app_run(app, fps);
 
-	    app_destroy(app);
+        app_destroy(app);
 
-      return 0;
+        return 0;
     }
 }
