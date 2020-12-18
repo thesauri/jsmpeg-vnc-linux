@@ -26,10 +26,10 @@ app_t *app_create(Display *display, Window window, int port, int bit_rate, int o
 void app_destroy(app_t *self);
 void app_run(app_t *self, int targt_fps);
 
-int app_on_http_req(app_t *self, struct lws *socket, char *request);
-void app_on_connect(app_t *self, struct lws *socket);
-void app_on_close(app_t *self, struct lws *socket);
-void app_on_message(app_t *self, struct lws *socket, void *data, size_t len);
+int app_on_http_req(app_t *self, struct libwebsocket *socket, char *request);
+void app_on_connect(app_t *self, struct libwebsocket *socket);
+void app_on_close(app_t *self, struct libwebsocket *socket);
+void app_on_message(app_t *self, struct libwebsocket *socket, void *data, size_t len);
 
 double time_since(clock_t start);
 
