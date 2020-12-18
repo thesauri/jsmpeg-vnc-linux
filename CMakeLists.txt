@@ -22,7 +22,5 @@ src/jsmpeg-vnc.c
 src/server.c
 )
 
-add_subdirectory(libwebsockets/)
-
 add_executable(${pjname} ${_HEADERS} ${_SOURCES}) 
 target_link_libraries(${pjname} websockets avcodec avutil swscale X11 Xtst z)
