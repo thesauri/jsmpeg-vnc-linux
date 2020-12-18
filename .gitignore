@@ -7,6 +7,7 @@ bin/jsmpeg-vnc
 *.ko
 *.obj
 *.elf
+CMakeLists.txt.user
 
 # Precompiled Headers
 *.gch
@@ -25,6 +26,11 @@ bin/jsmpeg-vnc
 *.i*86
 *.x86_64
 *.hex
+[Bb]uild
+[Bb]in
+[Dd]ebug
+[Rr]elease
+libwebsockets
 
 # Debug files
 *.dSYM/
