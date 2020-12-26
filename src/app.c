@@ -182,7 +182,10 @@ void app_on_message(app_t *self, struct lws *socket, void *data, size_t len) {
         }
 
         if( type & input_type_mouse_relative ) {
+            int x = (int) (input->x * self->mouse_speed);
+            int y = (int) (input->y * self->mouse_speed);
 
+            XWarpPointer(self->display, self->window, None, 0, 0, 0, 0, x, y);
         }
 
         if( type & input_type_mouse_button ) {
