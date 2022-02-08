@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
             height = 0,
             dump = 0;
 
-    char *display_name;
+    char *display_name = getenv("DISPLAY");
 
     // Parse command line options
     for (int i = 1; i < argc-1; i+=2) {
@@ -63,7 +63,13 @@ int main(int argc, char* argv[]) {
 
     char *window_title = argv[argc-1];
 
+    if (display_name == NULL) {
+	printf("No display name specified. Set this with the DISPLAY environment variable or with the -i <display_name> flag. Typically, this is :0 for the primary screen.\n");
+	return 1;
+    }
     Display *display = XOpenDisplay(display_name);
+
+
     Window window;
 
     if (strcmp(window_title, "desktop") == 0) {
